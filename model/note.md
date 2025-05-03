@@ -7,7 +7,7 @@ self.storage_dir = Path('Path_for_dataset')
 self.dataset = 'your_dataset_name'
 
 
-
+**To change pathes in the file data.csv run the file UpdatePathesInData.ipynb with your setted path in config_0.py**
 
 
 **Author of original idea https://github.com/dazzle-me/yandex-cup-2024-1st-place-solution/tree/main**
