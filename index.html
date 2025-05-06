@@ -1,197 +1,184 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Similarity Finder</title>
-    <style>
-        :root {
-            --color-bg: #ffffff;
-            --color-text: #24292e;
-            --color-border: #e1e4e8;
-            --color-primary: #0366d6;
-            --color-secondary: #f6f8fa;
-        }
-
-        [data-theme="dark"] {
-            --color-bg: #0d1117;
-            --color-text: #c9d1d9;
-            --color-border: #30363d;
-            --color-primary: #58a6ff;
-            --color-secondary: #161b22;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: var(--color-bg);
-            color: var(--color-text);
-            transition: all 0.3s ease;
-            margin: 0;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            padding: 0;
-            color: var(--color-text);
-        }
-
-        .upload-section {
-            border: 2px dashed var(--color-border);
-            border-radius: 6px;
-            padding: 2rem;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-label {
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            background: var(--color-primary);
-            color: white;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 1rem;
-        }
-
-        .results {
-            display: none;
-            margin-top: 2rem;
-        }
-
-        .result-item {
-            background: var(--color-secondary);
-            border: 1px solid var(--color-border);
-            border-radius: 6px;
-            padding: 1rem;
-            margin: 1rem 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .probability {
-            color: var(--color-primary);
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Music Similarity Finder</title>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-text: #24292e;
+      --color-border: #e1e4e8;
+      --color-primary: #0366d6;
+      --color-secondary: #f6f8fa;
+    }
+    [data-theme="dark"] {
+      --color-bg: #0d1117;
+      --color-text: #c9d1d9;
+      --color-border: #30363d;
+      --color-primary: #58a6ff;
+      --color-secondary: #161b22;
+    }
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--color-text);
+    }
+    .upload-section {
+      border: 2px dashed var(--color-border);
+      border-radius: 6px;
+      padding: 2rem;
+      text-align: center;
+      margin: 2rem 0;
+      background-color: var(--color-secondary);
+      transition: background-color 0.2s;
+    }
+    .upload-section.dragover {
+      background-color: var(--color-primary);
+      color: white;
+    }
+    .file-input {
+      display: none;
+    }
+    .upload-label {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--color-primary);
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .results {
+      display: none;
+      margin-top: 2rem;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: var(--color-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+    }
+    .probability {
+      font-weight: bold;
+      color: var(--color-primary);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon">🌙</button>
+  <div class="container">
+    <button id="themeToggle" class="theme-toggle">🌙</button>
+    <h1>Find Similar Music Tracks</h1>
 
-        <h1>Find Similar Music Tracks</h1>
+    <section id="uploadSection" class="upload-section">
+      <p>Drag and drop your music file here or</p>
+      <input type="file" id="fileInput" class="file-input" accept=".mp3,.wav,audio/mpeg,audio/wav"/>
+      <label for="fileInput" class="upload-label">Choose File</label>
+    </section>
 
-        <section class="upload-section">
-            <p>Drag and drop your music file here or</p>
-            <input type="file" class="file-input" id="fileInput" accept=".mp3,.wav,audio/mpeg,audio/wav">
-            <label for="fileInput" class="upload-label">Choose File</label>
-        </section>
+    <section id="results" class="results">
+      <h2>Top 5 Similar Tracks:</h2>
+      <div id="resultsList"></div>
+    </section>
+  </div>
 
-        <section class="results" id="results">
-            <h2>Top 5 Similar Tracks:</h2>
-            <div id="resultsList"></div>
-        </section>
-    </div>
+  <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    themeToggle.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      setTheme(next);
+    });
+    // initialize
+    setTheme(localStorage.getItem('theme') || 'light');
 
-    <script>
-        // Theme handling
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
+    // Elements
+    const uploadSection = document.getElementById('uploadSection');
+    const fileInput     = document.getElementById('fileInput');
+    const resultsSec    = document.getElementById('results');
+    const resultsList   = document.getElementById('resultsList');
 
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            setTheme(newTheme);
-        }
+    // Drag & drop styling
+    uploadSection.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadSection.classList.add('dragover');
+    });
+    uploadSection.addEventListener('dragleave', () => {
+      uploadSection.classList.remove('dragover');
+    });
+    uploadSection.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadSection.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      handleFile(fileInput.files[0]);
+    });
 
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        setTheme(savedTheme);
+    fileInput.addEventListener('change', () => {
+      handleFile(fileInput.files[0]);
+    });
 
-        // File upload handling
-        const fileInput = document.getElementById('fileInput');
-        const resultsSection = document.getElementById('results');
-        const resultsList = document.getElementById('resultsList');
+    // handle file
+    function handleFile(file) {
+      if (!file) return;
+      const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+      if (!['.mp3', '.wav'].includes(ext)) {
+        alert('Please upload a valid MP3 or WAV file');
+        return;
+      }
+      // send to backend
+      const form = new FormData();
+      form.append('file', file);
+      fetch('http://127.0.0.1:5000/similarity', {
+        method: 'POST',
+        body: form
+      })
+      .then(r => r.json())
+      .then(json => {
+        if (json.error) throw new Error(json.error);
+        displayResults(json.results);
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Error finding similar tracks');
+      });
+    }
 
-        fileInput.addEventListener('change', handleFileUpload);
-
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Validate file type
-            const validExtensions = ['.mp3', '.wav'];
-            const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-
-            if (!validExtensions.includes(fileExtension)) {
-                alert('Please upload a valid MP3 or WAV file');
-                return;
-            }
-
-            // Simulate API call
-            setTimeout(() => {
-                showResults(generateMockData());
-            }, 1000);
-        }
-
-        function generateMockData() {
-            return Array.from({length: 5}, (_, i) => ({
-                name: `Track ${i + 1}`,
-                probability: (Math.random() * 100).toFixed(1) + '%'
-            }));
-        }
-
-        function showResults(data) {
-            resultsList.innerHTML = data.map(item => `
-                <div class="result-item">
-                    <span>${item.name}</span>
-                    <span class="probability">${item.probability}</span>
-                </div>
-            `).join('');
-
-            resultsSection.style.display = 'block';
-        }
-
-        // Drag and drop handling
-        const uploadSection = document.querySelector('.upload-section');
-
-        uploadSection.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadSection.style.backgroundColor = 'var(--color-secondary)';
-        });
-
-        uploadSection.addEventListener('dragleave', () => {
-            uploadSection.style.backgroundColor = '';
-        });
-
-        uploadSection.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadSection.style.backgroundColor = '';
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                fileInput.files = e.dataTransfer.files;
-                handleFileUpload({ target: fileInput });
-            }
-        });
-    </script>
+    // render results
+    function displayResults(items) {
+      resultsList.innerHTML = items.map(i => `
+        <div class="result-item">
+          <span>${i.track}</span>
+          <span class="probability">${i.score}</span>
+        </div>
+      `).join('');
+      resultsSec.style.display = 'block';
+    }
+  </script>
 </body>
 </html>
