@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FideMix</title>
+  <style>
+    :root {
+      --bg:#ffffff; --txt:#24292e; --primary:#0366d6;
+      --border:#e1e4e8; --sec:#f6f8fa;
+    }
+    [data-theme="dark"] {
+      --bg:#0d1117; --txt:#c9d1d9; --primary:#58a6ff;
+      --border:#30363d; --sec:#161b22;
+    }
+    body {
+      margin:0; padding:2rem;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--txt);
+      transition:background .3s,color .3s;
+    }
+    .container { max-width:800px; margin:0 auto; }
+    .theme-toggle {
+      position:fixed; top:1rem; right:1rem;
+      font-size:1.5rem; background:none; border:none;
+      color:var(--txt); cursor:pointer;
+    }
+    .upload-section {
+      position:relative;
+      border:2px dashed var(--border);
+      border-radius:6px; padding:2rem;
+      text-align:center; margin:2rem 0;
+      background:var(--sec);
+      transition:background .2s,color .2s;
+    }
+    .upload-section.dragover {
+      background:var(--primary); color:#fff;
+    }
+    .file-input { display:none; }
+    .upload-label {
+      background:var(--primary); color:#fff;
+      padding:.5rem 1rem; border-radius:6px;
+      cursor:pointer;
+    }
+    #fileInfo {
+      margin-top:1rem; font-style:italic;
+      color:var(--txt);
+    }
+    #loading {
+      display:none;
+      position:absolute; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5);
+      align-items:center; justify-content:center;
+      border-radius:6px;
+    }
+    /* Spinner */
+    #loading .spinner {
+      width:40px; height:40px;
+      border:4px solid rgba(255,255,255,0.3);
+      border-top-color:#fff;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .results { display:none; margin-top:2rem; }
+    .result-item {
+      display:flex; justify-content:space-between;
+      align-items:center; padding:1rem; margin-bottom:1rem;
+      background:var(--sec);
+      border:1px solid var(--border);
+      border-radius:6px;
+    }
+    .probability { color:var(--primary); font-weight:bold;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="themeBtn" class="theme-toggle">☾</button>
+    <h1>FideMix - find similar music tracks</h1>
+
+    <section id="uploadBox" class="upload-section">
+      <div id="loading"><div class="spinner"></div></div>
+      <p>Drag and drop your music file here or</p>
+      <input id="fileInput" type="file" class="file-input" accept=".mp3,.wav,audio/*">
+      <label for="fileInput" class="upload-label">Choose File</label>
+      <div id="fileInfo"></div>
+    </section>
+
+    <section id="results" class="results">
+      <h2>Top 5 Similar Tracks:</h2>
+      <div id="resultsList"></div>
+    </section>
+  </div>
+
+  <script>
+  // Theme toggle
+  const html = document.documentElement;
+  const btn  = document.getElementById('themeBtn');
+  function setTheme(t){
+    html.setAttribute('data-theme', t);
+    localStorage.theme = t;
+    btn.textContent = t === 'dark' ? '☼' : '☾';
+  }
+  btn.onclick = ()=>
+    setTheme(localStorage.theme === 'dark' ? 'light' : 'dark');
+  setTheme(localStorage.theme || 'light');
+
+  // Elements
+  const uploadBox   = document.getElementById('uploadBox');
+  const fileInput   = document.getElementById('fileInput');
+  const fileInfo    = document.getElementById('fileInfo');
+  const loading     = document.getElementById('loading');
+  const results     = document.getElementById('results');
+  const resultsList = document.getElementById('resultsList');
+
+  // Drag & drop styling
+  ['dragover','dragenter'].forEach(evt =>
+    uploadBox.addEventListener(evt, e=>{
+      e.preventDefault();
+      uploadBox.classList.add('dragover');
+    })
+  );
+  ['dragleave','drop'].forEach(evt =>
+    uploadBox.addEventListener(evt, e=>{
+      e.preventDefault();
+      uploadBox.classList.remove('dragover');
+    })
+  );
+  uploadBox.addEventListener('drop', e=>{
+    if(e.dataTransfer.files.length)
+      handleFile(e.dataTransfer.files[0]);
+  });
+
+  // File‐chooser
+  fileInput.onchange = e=>{
+    if(e.target.files[0])
+      handleFile(e.target.files[0]);
+  };
+
+  // Main
+  function handleFile(file){
+    // Show filename immediately
+    fileInfo.innerHTML = `<small>File: ${file.name}</small>`;
+
+    // Prepare upload
+    const fd = new FormData();
+    fd.append('file', file);
+
+    // Show spinner
+    loading.style.display = 'flex';
+    results.style.display = 'none';
+
+    fetch('/similarity', {method:'POST', body: fd})
+      .then(r=>r.json())
+      .then(json => {
+        // update with metadata if available
+        if(json.file_label){
+          fileInfo.innerHTML = `
+            <em>Metadata: ${json.file_label}</em><br>
+            <small>File: ${file.name}</small>
+          `;
+        }
+        renderResults(json.results || []);
+      })
+      .catch(_ => alert('Error finding similar tracks'))
+      .finally(() => {
+        loading.style.display = 'none';
+      });
+  }
+
+  function renderResults(items){
+    if(!items.length){
+      alert('No similar tracks found');
+      return;
+    }
+    resultsList.innerHTML = items.map(i=>`
+      <div class="result-item">
+        <span>${i.name}</span>
+        <span class="probability">${i.probability}</span>
+      </div>
+    `).join('');
+    results.style.display = 'block';
+  }
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+    Metric  Value (%)
+Accuracy@1  47.300000
+  Recall@2  61.200000
+  Recall@3  68.666667
+  Recall@5  75.666667
+       MRR  62.362778
